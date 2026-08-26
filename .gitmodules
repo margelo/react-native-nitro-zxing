@@ -1,0 +1,3 @@
+[submodule "packages/react-native-vision-camera-zxing/cpp/zxing-core"]
+	path = packages/react-native-vision-camera-zxing/cpp/zxing-core
+	url = https://github.com/zxing-cpp/zxing-cpp.git

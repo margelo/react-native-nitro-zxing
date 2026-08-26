@@ -1,0 +1,20 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["camera", "zxing"],
+  "ios": {
+    "iosModuleName": "VisionCameraZxing"
+  },
+  "android": {
+    "androidNamespace": ["camera", "zxing"],
+    "androidCxxLibName": "VisionCameraZxing"
+  },
+  "autolinking": {
+    "ZXingBarcodeScannerFactory": {
+      "all": {
+        "language": "c++",
+        "implementationClassName": "HybridBarcodeScannerFactory"
+      }
+    }
+  },
+  "ignorePaths": ["**/node_modules", "**/zxing-core"]
+}

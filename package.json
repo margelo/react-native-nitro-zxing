@@ -1,0 +1,97 @@
+{
+  "name": "react-native-vision-camera-zxing-monorepo",
+  "packageManager": "bun@1.3.14",
+  "type": "module",
+  "private": true,
+  "description": "Monorepo for react-native-vision-camera-zxing and its example app.",
+  "author": "Margelo",
+  "workspaces": [
+    "packages/react-native-vision-camera-zxing",
+    "apps/example"
+  ],
+  "scripts": {
+    "bootstrap": "bun i && bun run build && bun example bundle-install && bun example pods",
+    "specs": "bun zxing specs",
+    "build": "bun zxing build",
+    "typecheck": "bun zxing typecheck",
+    "example": "bun --cwd apps/example",
+    "zxing": "bun --cwd packages/react-native-vision-camera-zxing",
+    "release": "./scripts/release.sh",
+    "lint-js": "biome check --write",
+    "lint-cpp": "./scripts/clang-format.sh",
+    "lint-swift": "./scripts/swift-format.sh",
+    "lint-kotlin": "./scripts/kotlin-format.sh",
+    "lint-all": "bun lint-cpp && bun lint-swift && bun lint-kotlin && bun lint-js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@tsconfig/react-native": "^3.0.9",
+    "@types/bun": "^1.3.14",
+    "@release-it-plugins/workspaces": "^5.0.3",
+    "@release-it/bumper": "^7.0.5",
+    "@release-it/conventional-changelog": "^11.0.0",
+    "release-it": "^20.2.1"
+  },
+  "peerDependencies": {
+    "typescript": "^6.0.3"
+  },
+  "release-it": {
+    "npm": {
+      "publish": false
+    },
+    "git": {
+      "commitMessage": "chore: release ${version}",
+      "tagName": "v${version}",
+      "requireCleanWorkingDir": false
+    },
+    "github": {
+      "release": true
+    },
+    "hooks": {
+      "before:release": "bun i && bun run build && bun specs",
+      "after:bump": "scripts/try-install-lockfiles.sh"
+    },
+    "plugins": {
+      "@release-it/bumper": {
+        "out": [
+          {
+            "file": "packages/react-native-vision-camera-zxing/package.json",
+            "path": "version"
+          },
+          {
+            "file": "apps/example/package.json",
+            "path": "version"
+          }
+        ]
+      },
+      "@release-it/conventional-changelog": {
+        "preset": {
+          "name": "conventionalcommits",
+          "types": [
+            {
+              "type": "feat",
+              "section": "✨ Features"
+            },
+            {
+              "type": "perf",
+              "section": "💨 Performance Improvements"
+            },
+            {
+              "type": "fix",
+              "section": "🐛 Bug Fixes"
+            },
+            {
+              "type": "chore(deps)",
+              "section": "🛠️ Dependency Upgrades"
+            },
+            {
+              "type": "docs",
+              "section": "📚 Documentation"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "version": "0.1.0"
+}
