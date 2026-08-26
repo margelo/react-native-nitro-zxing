@@ -7,13 +7,13 @@ import {
   Text,
   View,
 } from 'react-native'
+import { useBarcodeScanner } from 'react-native-nitro-zxing'
 import {
   Camera,
   useCameraDevice,
   useFrameOutput,
   usePhotoOutput,
 } from 'react-native-vision-camera'
-import { useBarcodeScanner } from 'react-native-vision-camera-zxing'
 import { scheduleOnRN } from 'react-native-worklets'
 import { useIsActive } from '../hooks/useIsActive'
 

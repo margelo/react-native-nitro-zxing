@@ -27,12 +27,12 @@
         "react-native": "0.85.3",
         "react-native-nitro-image": "0.15.2",
         "react-native-nitro-modules": "0.37.0",
+        "react-native-nitro-zxing": "../../packages/react-native-nitro-zxing",
         "react-native-safe-area-context": "^5.8.0",
         "react-native-screens": "^4.25.2",
         "react-native-vision-camera": "5.2.3",
         "react-native-vision-camera-barcode-scanner": "5.2.3",
         "react-native-vision-camera-worklets": "5.2.3",
-        "react-native-vision-camera-zxing": "../../packages/react-native-vision-camera-zxing",
         "react-native-worklets": "0.9.1",
       },
       "devDependencies": {
@@ -49,8 +49,8 @@
         "typescript": "6.0.3",
       },
     },
-    "packages/react-native-vision-camera-zxing": {
-      "name": "react-native-vision-camera-zxing",
+    "packages/react-native-nitro-zxing": {
+      "name": "react-native-nitro-zxing",
       "version": "0.1.0",
       "devDependencies": {
         "@types/react": "19.2.15",
@@ -1221,6 +1221,8 @@
 
     "react-native-nitro-modules": ["react-native-nitro-modules@0.37.0", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-ULS2CBZcdwGw5d4Y35EV/tbCOsNsQOnQ9LC9CehMhDNm5c90lwF/LxRamzKuFpjI547G7teTQgD0peqYSGnP9g=="],
 
+    "react-native-nitro-zxing": ["react-native-nitro-zxing@workspace:packages/react-native-nitro-zxing"],
+
     "react-native-safe-area-context": ["react-native-safe-area-context@5.9.1", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-Zpx9Iwg6VhgNarWFpcIM61xK2lUbSfSXemQUmcvOVRpux49lJsUompY1S3E5jKUJbLq233qEpj28DgmXVsgZMQ=="],
 
     "react-native-screens": ["react-native-screens@4.27.0", "", { "dependencies": { "react-freeze": "^1.0.0", "warn-once": "^0.1.0" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-IUukKYilhKhdJqGh59BmxrAjgIO84CaOkdowEY20+RmapOAFpqS//xOIcq2iqDQ4xVoxuwCHGWhY/Tbz6lTblA=="],
@@ -1230,8 +1232,6 @@
     "react-native-vision-camera-barcode-scanner": ["react-native-vision-camera-barcode-scanner@5.2.3", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-nitro-image": "*", "react-native-nitro-modules": "*", "react-native-vision-camera": "*" }, "optionalPeers": ["react-native-nitro-modules"] }, "sha512-p8SyswRlr9Ty5gFcQ1qM8gmU8hKbHyRLyu9TKFMD7oUXsZDF93NKGvcr4Qdr16Z+AIj3HYA/fW1NgoeY+L353g=="],
 
     "react-native-vision-camera-worklets": ["react-native-vision-camera-worklets@5.2.3", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-nitro-modules": "*", "react-native-vision-camera": "*", "react-native-worklets": "*" }, "optionalPeers": ["react-native-nitro-modules"] }, "sha512-POwjbl1853KFSWYw3/yb3NnRpCWjg7w4dS5LvFVHeMGvPv1Qyu5CCOqYKcB3TUJlg3L4Tn/iBgs0p1NHcCrmxA=="],
-
-    "react-native-vision-camera-zxing": ["react-native-vision-camera-zxing@workspace:packages/react-native-vision-camera-zxing"],
 
     "react-native-worklets": ["react-native-worklets@0.9.1", "", { "dependencies": { "@babel/plugin-transform-arrow-functions": "^7.27.1", "@babel/plugin-transform-class-properties": "^7.28.6", "@babel/plugin-transform-classes": "^7.28.6", "@babel/plugin-transform-nullish-coalescing-operator": "^7.28.6", "@babel/plugin-transform-optional-chaining": "^7.28.6", "@babel/plugin-transform-shorthand-properties": "^7.27.1", "@babel/plugin-transform-template-literals": "^7.27.1", "@babel/plugin-transform-unicode-regex": "^7.27.1", "@babel/preset-typescript": "^7.28.5", "convert-source-map": "^2.0.0", "semver": "^7.7.4" }, "peerDependencies": { "@babel/core": "*", "@react-native/metro-config": "*", "react": "*", "react-native": "0.83 - 0.86" } }, "sha512-kb6lGtBI5Ap41tvBPM09Np472r2GXuJ+jRApIFy1eXBk699eChG3U+lyqRC2/wz/VDpaJAy6i5XPcceNOoH3mA=="],
 

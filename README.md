@@ -1,14 +1,14 @@
-# react-native-vision-camera-zxing
+# react-native-nitro-zxing
 
 Barcode scanning for [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) v5, powered by [zxing-cpp](https://github.com/zxing-cpp/zxing-cpp) and implemented as pure C++ [Nitro](https://github.com/mrousavy/nitro) HybridObjects. The camera's luminance plane is decoded in place - no ML Kit, no base64, no temp files.
 
 ```sh
-npm install react-native-vision-camera-zxing react-native-vision-camera react-native-nitro-modules react-native-nitro-image
+npm install react-native-nitro-zxing react-native-vision-camera react-native-nitro-modules react-native-nitro-image
 ```
 
 ```ts
 import { useFrameOutput } from 'react-native-vision-camera'
-import { useBarcodeScanner } from 'react-native-vision-camera-zxing'
+import { useBarcodeScanner } from 'react-native-nitro-zxing'
 
 const scanner = useBarcodeScanner({ barcodeFormats: ['all-formats'] })
 const frameOutput = useFrameOutput({
@@ -25,11 +25,11 @@ The API mirrors `react-native-vision-camera-barcode-scanner` (`Barcode`, `Barcod
 
 ## Repository
 
-- `packages/react-native-vision-camera-zxing` - the library (`cpp/` C++ HybridObjects, `cpp/zxing-core` zxing-cpp git submodule)
+- `packages/react-native-nitro-zxing` - the library (`cpp/` C++ HybridObjects, `cpp/zxing-core` zxing-cpp git submodule)
 - `apps/example` - example + benchmark app
 
 ```sh
-git clone --recursive https://github.com/margelo/react-native-vision-camera-zxing
+git clone --recursive https://github.com/margelo/react-native-nitro-zxing
 bun install
 bun specs      # nitrogen codegen
 bun example android
