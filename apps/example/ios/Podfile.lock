@@ -2145,7 +2145,7 @@ PODS:
     - RNWorklets
     - VisionCamera
     - Yoga
-  - VisionCameraZxing (0.1.0):
+  - VisionCameraZxing (0.1.0-alpha.0):
     - hermes-engine
     - NitroImage
     - NitroModules
@@ -2256,7 +2256,7 @@ DEPENDENCIES:
   - VisionCamera (from `../../../node_modules/react-native-vision-camera`)
   - VisionCameraBarcodeScanner (from `../../../node_modules/react-native-vision-camera-barcode-scanner`)
   - VisionCameraWorklets (from `../../../node_modules/react-native-vision-camera-worklets`)
-  - VisionCameraZxing (from `../../../node_modules/react-native-vision-camera-zxing`)
+  - VisionCameraZxing (from `../node_modules/react-native-nitro-zxing`)
   - Yoga (from `../../../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2438,7 +2438,7 @@ EXTERNAL SOURCES:
   VisionCameraWorklets:
     :path: "../../../node_modules/react-native-vision-camera-worklets"
   VisionCameraZxing:
-    :path: "../../../node_modules/react-native-vision-camera-zxing"
+    :path: "../node_modules/react-native-nitro-zxing"
   Yoga:
     :path: "../../../node_modules/react-native/ReactCommon/yoga"
 
@@ -2535,7 +2535,7 @@ SPEC CHECKSUMS:
   VisionCamera: f84550cffbbf23f3cac7a3d1d2e66e5098a4e8eb
   VisionCameraBarcodeScanner: 20cca2d99425546548511a95980bb8b1117fb830
   VisionCameraWorklets: b6de1b4f950e958236366987750ed0b3c86228b9
-  VisionCameraZxing: 3e9666c2981202eb724c7ebf55539ea9e16ceb3e
+  VisionCameraZxing: a3ce3b306638ce4503a0f0dabbd28574a144136b
   Yoga: 77dfa8673de2874e1855002ae59c68b8be9b007b
 
 PODFILE CHECKSUM: 225e4ff5bb6719c47fa66724251c4ad2098c76da

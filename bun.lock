@@ -19,7 +19,7 @@
     },
     "apps/example": {
       "name": "example",
-      "version": "0.1.0",
+      "version": "0.1.0-alpha.0",
       "dependencies": {
         "@react-navigation/native": "^7.2.5",
         "@react-navigation/native-stack": "^7.16.0",
@@ -51,7 +51,7 @@
     },
     "packages/react-native-nitro-zxing": {
       "name": "react-native-nitro-zxing",
-      "version": "0.1.0",
+      "version": "0.1.0-alpha.0",
       "devDependencies": {
         "@types/react": "19.2.15",
         "nitrogen": "0.37.0",
@@ -1564,6 +1564,8 @@
     "error-ex/is-arrayish": ["is-arrayish@0.2.1", "", {}, "sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg=="],
 
     "escodegen/source-map": ["source-map@0.6.1", "", {}, "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g=="],
+
+    "example/react-native-nitro-zxing": ["react-native-nitro-zxing@file:packages/react-native-nitro-zxing", { "devDependencies": { "@types/react": "19.2.15", "nitrogen": "0.37.0", "react": "19.2.3", "react-native": "0.85.3", "react-native-nitro-image": "0.15.2", "react-native-nitro-modules": "0.37.0", "react-native-vision-camera": "5.2.3", "typescript": "6.0.3" }, "peerDependencies": { "react": "*", "react-native": "*", "react-native-nitro-image": "*", "react-native-nitro-modules": "*", "react-native-vision-camera": "*" }, "optionalPeers": ["react-native-nitro-modules"] }],
 
     "finalhandler/debug": ["debug@2.6.9", "", { "dependencies": { "ms": "2.0.0" } }, "sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA=="],
 
