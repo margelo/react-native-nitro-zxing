@@ -1,3 +1,8 @@
+// Android-only: this is how React Native's pure-C++ autolinking reaches this library.
+// On iOS the Hybrid Objects are registered by nitrogen's generated Autolinking.mm instead,
+// and the header included below only exists in the generated Android output.
+#ifdef __ANDROID__
+
 #include "VisionCameraZxingModule.h"
 
 #include "VisionCameraZxingOnLoad.hpp"
@@ -28,3 +33,5 @@ namespace {
 
 } // namespace
 } // namespace margelo::nitro::camera::zxing
+
+#endif // __ANDROID__

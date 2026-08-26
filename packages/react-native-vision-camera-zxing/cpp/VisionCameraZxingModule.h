@@ -1,5 +1,8 @@
 #pragma once
 
+// Android-only; see VisionCameraZxingModule.cpp.
+#ifdef __ANDROID__
+
 #include <ReactCommon/TurboModule.h>
 
 #include <memory>
@@ -23,3 +26,5 @@ public:
 };
 
 } // namespace facebook::react
+
+#endif // __ANDROID__
