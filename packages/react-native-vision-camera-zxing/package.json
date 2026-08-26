@@ -12,7 +12,7 @@
     "react-native.config.js",
     "lib",
     "nitrogen",
-    "android/CMakeLists.txt",
+    "cmake/CMakeLists.txt",
     "ios/**/*.h",
     "ios/**/*.m",
     "ios/**/*.mm",
