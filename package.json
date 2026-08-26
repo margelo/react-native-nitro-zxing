@@ -1,12 +1,12 @@
 {
-  "name": "react-native-vision-camera-zxing-monorepo",
+  "name": "react-native-nitro-zxing-monorepo",
   "packageManager": "bun@1.3.14",
   "type": "module",
   "private": true,
-  "description": "Monorepo for react-native-vision-camera-zxing and its example app.",
+  "description": "Monorepo for react-native-nitro-zxing and its example app.",
   "author": "Margelo",
   "workspaces": [
-    "packages/react-native-vision-camera-zxing",
+    "packages/react-native-nitro-zxing",
     "apps/example"
   ],
   "scripts": {
@@ -15,7 +15,7 @@
     "build": "bun zxing build",
     "typecheck": "bun zxing typecheck",
     "example": "bun --cwd apps/example",
-    "zxing": "bun --cwd packages/react-native-vision-camera-zxing",
+    "zxing": "bun --cwd packages/react-native-nitro-zxing",
     "release": "./scripts/release.sh",
     "lint-js": "biome check --write",
     "lint-cpp": "./scripts/clang-format.sh",
@@ -55,7 +55,7 @@
       "@release-it/bumper": {
         "out": [
           {
-            "file": "packages/react-native-vision-camera-zxing/package.json",
+            "file": "packages/react-native-nitro-zxing/package.json",
             "path": "version"
           },
           {

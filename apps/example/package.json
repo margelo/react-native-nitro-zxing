@@ -1,7 +1,7 @@
 {
   "name": "example",
   "private": true,
-  "description": "Example app for developing, testing and benchmarking react-native-vision-camera-zxing.",
+  "description": "Example app for developing, testing and benchmarking react-native-nitro-zxing.",
   "author": "Margelo",
   "scripts": {
     "android": "react-native run-android",
@@ -23,7 +23,7 @@
     "react-native-vision-camera": "5.2.3",
     "react-native-vision-camera-barcode-scanner": "5.2.3",
     "react-native-vision-camera-worklets": "5.2.3",
-    "react-native-vision-camera-zxing": "../../packages/react-native-vision-camera-zxing",
+    "react-native-nitro-zxing": "../../packages/react-native-nitro-zxing",
     "react-native-worklets": "0.9.1"
   },
   "devDependencies": {

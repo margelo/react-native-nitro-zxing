@@ -1,5 +1,5 @@
 {
-  "name": "react-native-vision-camera-zxing",
+  "name": "react-native-nitro-zxing",
   "version": "0.1.0",
   "description": "Barcode scanning plugin for react-native-vision-camera powered by zxing-cpp.",
   "main": "lib/index",
@@ -59,14 +59,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/margelo/react-native-vision-camera-zxing.git"
+    "url": "git+https://github.com/margelo/react-native-nitro-zxing.git"
   },
   "author": "Margelo",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/margelo/react-native-vision-camera-zxing/issues"
+    "url": "https://github.com/margelo/react-native-nitro-zxing/issues"
   },
-  "homepage": "https://github.com/margelo/react-native-vision-camera-zxing",
+  "homepage": "https://github.com/margelo/react-native-nitro-zxing",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

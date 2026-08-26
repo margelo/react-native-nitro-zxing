@@ -1,15 +1,15 @@
-# react-native-vision-camera-zxing
+# react-native-nitro-zxing
 
 A [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) v5 barcode scanner powered by [zxing-cpp](https://github.com/zxing-cpp/zxing-cpp), implemented as pure C++ Nitro HybridObjects. Frames are decoded straight from the camera's pixel buffer (Y plane, zero-copy) - no ML Kit, no base64, no temporary files.
 
 ```sh
-npm install react-native-vision-camera-zxing react-native-nitro-image
+npm install react-native-nitro-zxing react-native-nitro-image
 ```
 
 Requires VisionCamera Core, Nitro Modules and Nitro Image. For frame processors also install `react-native-vision-camera-worklets` and `react-native-worklets`.
 
 ```ts
-import { useBarcodeScanner } from 'react-native-vision-camera-zxing'
+import { useBarcodeScanner } from 'react-native-nitro-zxing'
 
 const scanner = useBarcodeScanner({ barcodeFormats: ['all-formats'] })
 const frameOutput = useFrameOutput({

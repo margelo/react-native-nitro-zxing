@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native'
 import type { Image } from 'react-native-nitro-image'
+import type { BarcodeScanner as ZXingScanner } from 'react-native-nitro-zxing'
+import { useBarcodeScanner as useZXingBarcodeScanner } from 'react-native-nitro-zxing'
 import type { Frame } from 'react-native-vision-camera'
 import {
   Camera,
@@ -18,8 +20,6 @@ import {
 } from 'react-native-vision-camera'
 import type { BarcodeScanner as MLKitScanner } from 'react-native-vision-camera-barcode-scanner'
 import { useBarcodeScanner as useMLKitBarcodeScanner } from 'react-native-vision-camera-barcode-scanner'
-import type { BarcodeScanner as ZXingScanner } from 'react-native-vision-camera-zxing'
-import { useBarcodeScanner as useZXingBarcodeScanner } from 'react-native-vision-camera-zxing'
 import { scheduleOnRN } from 'react-native-worklets'
 import { SampleCollector } from '../bench/collector'
 import { loadTestImage } from '../bench/loadTestImage'

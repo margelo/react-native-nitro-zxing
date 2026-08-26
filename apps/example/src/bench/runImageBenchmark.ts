@@ -1,6 +1,6 @@
 import type { Image } from 'react-native-nitro-image'
+import type { BarcodeScanner as ZXingScanner } from 'react-native-nitro-zxing'
 import type { BarcodeScanner as MLKitScanner } from 'react-native-vision-camera-barcode-scanner'
-import type { BarcodeScanner as ZXingScanner } from 'react-native-vision-camera-zxing'
 import { computeStats, type LatencyStats } from './stats'
 
 export interface ImageBenchmarkResult {

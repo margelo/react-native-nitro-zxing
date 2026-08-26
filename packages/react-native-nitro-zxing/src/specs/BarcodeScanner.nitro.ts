@@ -73,7 +73,7 @@ export interface BarcodeScanner
    * @example
    * ```ts
    * import { loadImage } from 'react-native-nitro-image'
-   * import { createBarcodeScanner } from 'react-native-vision-camera-zxing'
+   * import { createBarcodeScanner } from 'react-native-nitro-zxing'
    *
    * const image = await loadImage({ url: 'https://example.com/barcode.png' })
    * const scanner = createBarcodeScanner({ barcodeFormats: ['all-formats'] })
