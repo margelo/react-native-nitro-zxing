@@ -57,14 +57,21 @@ HybridBarcodeScanner::HybridBarcodeScanner(const std::vector<TargetBarcodeFormat
 
 HybridBarcodes HybridBarcodeScanner::scanCodes(const std::shared_ptr<camera::HybridFrameSpec>& frame) {
   FrameImageView view(frame);
-  return toHybridBarcodes(_liveDecoder.decode(view.imageView()));
+  std::vector<DecodedBarcode> decoded = _liveDecoder.decode(view.imageView());
+  return toHybridBarcodes(std::move(decoded));
 }
 
 std::shared_ptr<Promise<HybridBarcodes>> HybridBarcodeScanner::scanCodesAsync(const std::shared_ptr<camera::HybridFrameSpec>& frame) {
-  // All Frame access happens here on the caller's thread. The view holds the Frame (and its planes)
-  // alive, so the pixel memory stays owned by the Frame for the whole async decode - no copy needed.
-  auto view = std::make_shared<FrameImageView>(frame);
-  return Promise<HybridBarcodes>::async([view, decoder = _liveDecoder]() -> HybridBarcodes { return toHybridBarcodes(decoder.decode(view->imageView())); });
+  // Building the view has to stay on the caller's thread: on Android the Frame is a JNI-backed
+  // HybridObject and the decode threads are not attached to the JVM, so reading it there aborts the
+  // process. The view holds the Frame (and its planes) alive, so the pixel memory stays owned by
+  // the Frame for the whole async decode - no copy needed.
+  std::shared_ptr<FrameImageView> view = std::make_shared<FrameImageView>(frame);
+  std::shared_ptr<HybridBarcodeScanner> self = shared_cast<HybridBarcodeScanner>();
+  return Promise<HybridBarcodes>::async([self, view]() -> HybridBarcodes {
+    std::vector<DecodedBarcode> decoded = self->_liveDecoder.decode(view->imageView());
+    return toHybridBarcodes(std::move(decoded));
+  });
 }
 
 std::shared_ptr<Promise<HybridBarcodes>> HybridBarcodeScanner::scanCodesInImageAsync(const std::shared_ptr<image::HybridImageSpec>& image) {
@@ -76,7 +83,9 @@ std::shared_ptr<Promise<HybridBarcodes>> HybridBarcodeScanner::scanCodesInImageA
   double cornerScale = 1.0;
   if (longestEdge > ZXingDecoder::kStillWorkingEdge) {
     const double ratio = ZXingDecoder::kStillWorkingEdge / longestEdge;
-    source = image->resize(std::round(image->getWidth() * ratio), std::round(image->getHeight() * ratio));
+    const double targetWidth = std::round(image->getWidth() * ratio);
+    const double targetHeight = std::round(image->getHeight() * ratio);
+    source = image->resize(targetWidth, targetHeight);
     cornerScale = image->getWidth() / source->getWidth();
   }
 
@@ -99,7 +108,9 @@ std::shared_ptr<Promise<HybridBarcodes>> HybridBarcodeScanner::scanCodesInImageA
     if (cornerScale != 1.0) {
       for (DecodedBarcode& barcode : decoded) {
         for (ZXing::PointI& corner : barcode.corners) {
-          corner = ZXing::PointI{static_cast<int>(std::lround(corner.x * cornerScale)), static_cast<int>(std::lround(corner.y * cornerScale))};
+          const int x = static_cast<int>(std::lround(corner.x * cornerScale));
+          const int y = static_cast<int>(std::lround(corner.y * cornerScale));
+          corner = ZXing::PointI{x, y};
         }
       }
     }

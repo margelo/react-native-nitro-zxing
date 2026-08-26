@@ -43,7 +43,8 @@ FrameImageView::FrameImageView(const std::shared_ptr<camera::HybridFrameSpec>& f
       }
       _buffer = _planes[0]->getPixelBuffer();
       const int rowStride = static_cast<int>(_planes[0]->getBytesPerRow());
-      _view = ZXing::ImageView(_buffer->data(), width, height, ZXing::ImageFormat::Lum, rowStride);
+      const uint8_t* data = _buffer->data();
+      _view = ZXing::ImageView(data, width, height, ZXing::ImageFormat::Lum, rowStride);
       break;
     }
     case camera::PixelFormat::RGB_BGRA_8_BIT:
@@ -51,10 +52,14 @@ FrameImageView::FrameImageView(const std::shared_ptr<camera::HybridFrameSpec>& f
     case camera::PixelFormat::RGB_RGB_8_BIT: {
       _buffer = frame->getPixelBuffer();
       const int rowStride = static_cast<int>(frame->getBytesPerRow());
-      ZXing::ImageFormat format = pixelFormat == camera::PixelFormat::RGB_BGRA_8_BIT   ? ZXing::ImageFormat::BGRA
-                                  : pixelFormat == camera::PixelFormat::RGB_RGBA_8_BIT ? ZXing::ImageFormat::RGBA
-                                                                                       : ZXing::ImageFormat::RGB;
-      _view = ZXing::ImageView(_buffer->data(), width, height, format, rowStride);
+      ZXing::ImageFormat format = ZXing::ImageFormat::RGB;
+      if (pixelFormat == camera::PixelFormat::RGB_BGRA_8_BIT) {
+        format = ZXing::ImageFormat::BGRA;
+      } else if (pixelFormat == camera::PixelFormat::RGB_RGBA_8_BIT) {
+        format = ZXing::ImageFormat::RGBA;
+      }
+      const uint8_t* data = _buffer->data();
+      _view = ZXing::ImageView(data, width, height, format, rowStride);
       break;
     }
     default:
@@ -63,7 +68,8 @@ FrameImageView::FrameImageView(const std::shared_ptr<camera::HybridFrameSpec>& f
   }
 
   // ponytail: isMirrored is ignored - zxing decodes mirrored symbols and the ML Kit reference ignores it on Android too.
-  _view = _view.rotated(rotationDegrees(frame->getOrientation()));
+  const int rotation = rotationDegrees(frame->getOrientation());
+  _view = _view.rotated(rotation);
 }
 
 } // namespace margelo::nitro::camera::zxing

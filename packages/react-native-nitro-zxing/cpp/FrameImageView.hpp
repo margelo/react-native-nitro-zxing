@@ -14,7 +14,7 @@ namespace margelo::nitro::camera::zxing {
 /**
  * Wraps a VisionCamera `Frame` as a zero-copy `ZXing::ImageView`, rotated upright by the Frame's orientation.
  * Keeps the Frame, its planes and the pixel `ArrayBuffer` alive for as long as this object lives.
- * All calls into the Frame happen in the constructor, so build it on the thread that owns the Frame.
+ * All calls into the Frame happen in the constructor, so the Frame must still be valid when it runs.
  */
 class FrameImageView final {
 public:

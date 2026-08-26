@@ -94,8 +94,9 @@ namespace {
   }
 
   ZXing::ReaderOptions makeOptions(const std::vector<ZXing::BarcodeFormat>& formats, bool tryHarder, bool tryRotate, bool tryDownscale) {
+    ZXing::BarcodeFormats barcodeFormats{std::vector<ZXing::BarcodeFormat>(formats)};
     ZXing::ReaderOptions options;
-    options.setFormats(ZXing::BarcodeFormats(std::vector<ZXing::BarcodeFormat>(formats)));
+    options.setFormats(barcodeFormats);
     options.setTryHarder(tryHarder);
     options.setTryRotate(tryRotate);
     options.setTryInvert(tryHarder);

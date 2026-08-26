@@ -11,7 +11,9 @@ namespace {
       return false;
     }
     for (size_t i = 0; i < prefix.size(); i++) {
-      if (std::tolower(static_cast<unsigned char>(text[i])) != std::tolower(static_cast<unsigned char>(prefix[i]))) {
+      const int textChar = std::tolower(static_cast<unsigned char>(text[i]));
+      const int prefixChar = std::tolower(static_cast<unsigned char>(prefix[i]));
+      if (textChar != prefixChar) {
         return false;
       }
     }

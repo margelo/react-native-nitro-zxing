@@ -23,7 +23,8 @@ std::vector<uint8_t> downscaleToLuminance(const ZXing::ImageView& image, int fac
           sum += isLuminance ? *pixel : ZXing::RGBToLum(pixel[redIndex], pixel[greenIndex], pixel[blueIndex]);
         }
       }
-      pixels[static_cast<size_t>(y) * static_cast<size_t>(width) + static_cast<size_t>(x)] = static_cast<uint8_t>(sum / samples);
+      const size_t index = static_cast<size_t>(y) * static_cast<size_t>(width) + static_cast<size_t>(x);
+      pixels[index] = static_cast<uint8_t>(sum / samples);
     }
   }
   outView = ZXing::ImageView(pixels.data(), width, height, ZXing::ImageFormat::Lum);
