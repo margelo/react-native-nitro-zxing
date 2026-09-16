@@ -13,31 +13,33 @@ composer require margelo/zxing-scanner
 ```php
 use Margelo\ZxingScanner\Facades\ZxingScanner;
 
-// Closed loop, fully native: the scanner POSTs {"value": code} to the report URL
-// over one keep-alive connection and counts every reply whose "ok" is true.
-// PHP runs once to start the run and once when RunCompleted arrives.
-ZxingScanner::start(1000, config('services.qr_server.url').'/scan');
-
-// Or let the app decide what counts: every decode fires CodeScanned, and the
-// app confirms the ones it accepts. This costs a PHP request per code.
+// Open the camera before starting the timed run. On Android every decoded frame
+// fires CodeScanned; PHP owns dedupe, network reporting, counting and timing.
 ZxingScanner::start(1000);
-ZxingScanner::confirm();
+ZxingScanner::update(count: 42, elapsedMs: 5800, phase: 'running');
 
 ZxingScanner::stop();
 ```
 
-The clock starts on the first confirmed scan, not when the camera opens.
+The included benchmark starts the clock immediately after PHP's `/reset` request
+succeeds, matching the React Native throughput screen.
 
 ## Listening for Events
 
 ```php
-use Margelo\ZxingScanner\Events\RunCompleted;
+use Margelo\ZxingScanner\Events\CodeScanned;
+use Margelo\ZxingScanner\Events\StartRequested;
 
-class RecordRun
+class RunBenchmark
 {
-    public function handle(RunCompleted $event): void
+    public function start(StartRequested $event): void
     {
-        // $event->count, $event->elapsedMs
+        // PHP resets the QR server and starts the clock.
+    }
+
+    public function scan(CodeScanned $event): void
+    {
+        // PHP dedupes and POSTs $event->data to /scan.
     }
 }
 ```

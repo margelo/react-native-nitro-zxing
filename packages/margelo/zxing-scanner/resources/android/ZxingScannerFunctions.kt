@@ -10,12 +10,6 @@ import com.nativephp.mobile.bridge.BridgeFunction
 import com.nativephp.mobile.bridge.BridgeResponse
 
 object ZxingScannerFunctions {
-
-    /**
-     * Opens the live scanner over the current screen. `target` is the confirmed-scan count that
-     * ends the run; with a `report_url` the scanner posts each code there itself and counts the
-     * ones the server accepts, so no PHP request runs during the benchmark.
-     */
     class Start(private val activity: FragmentActivity) : BridgeFunction {
         override fun execute(parameters: Map<String, Any>): Map<String, Any> {
             if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -24,19 +18,26 @@ object ZxingScannerFunctions {
             }
 
             val target = (parameters["target"] as? Number)?.toInt() ?: 1000
-            val reportUrl = (parameters["report_url"] as? String)?.takeIf { it.isNotBlank() }
             activity.runOnUiThread {
                 ZxingScannerView.current?.close()
-                ZxingScannerView(activity, target, reportUrl).show()
+                ZxingScannerView(activity, target).show()
             }
-            return BridgeResponse.success(mapOf("target" to target, "report_url" to (reportUrl ?: "")))
+            return BridgeResponse.success(mapOf("target" to target))
         }
     }
 
-    /** The app calls this once its server accepted a scan, so the overlay counts real progress. */
-    class Confirm(private val context: Context) : BridgeFunction {
+    class Update(private val context: Context) : BridgeFunction {
         override fun execute(parameters: Map<String, Any>): Map<String, Any> {
-            ZxingScannerView.current?.let { view -> view.post { view.confirm() } }
+            ZxingScannerView.current?.let { view ->
+                view.post {
+                    view.update(
+                        count = (parameters["count"] as? Number)?.toInt() ?: 0,
+                        elapsedMs = (parameters["elapsed_ms"] as? Number)?.toDouble() ?: 0.0,
+                        phase = parameters["phase"] as? String ?: "ready",
+                        error = parameters["error"] as? String ?: "",
+                    )
+                }
+            }
             return BridgeResponse.success()
         }
     }

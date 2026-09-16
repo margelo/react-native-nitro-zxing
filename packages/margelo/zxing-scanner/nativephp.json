@@ -31,8 +31,12 @@
             "description": "Open the camera and start decoding QR codes with zxing-cpp"
         },
         {
+            "name": "ZxingScanner.Update",
+            "android": "com.margelo.plugins.zxing_scanner.ZxingScannerFunctions.Update",
+            "description": "Display PHP-owned benchmark progress on the Android camera overlay"
+        },
+        {
             "name": "ZxingScanner.Confirm",
-            "android": "com.margelo.plugins.zxing_scanner.ZxingScannerFunctions.Confirm",
             "ios": "ZxingScannerFunctions.Confirm",
             "description": "Count one server-confirmed scan on the live overlay"
         },
@@ -100,6 +104,7 @@
     "secrets": [],
     "events": [
         "Margelo\\ZxingScanner\\Events\\CodeScanned",
+        "Margelo\\ZxingScanner\\Events\\StartRequested",
         "Margelo\\ZxingScanner\\Events\\RunCompleted"
     ],
     "service_provider": "Margelo\\ZxingScanner\\ZxingScannerServiceProvider",
