@@ -4,6 +4,10 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CaptureRequest
+import android.util.Range
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
@@ -11,6 +15,8 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.camera.camera2.interop.Camera2Interop
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -106,16 +112,28 @@ class ZxingScannerView(
         future.addListener({
             val provider = future.get()
             cameraProvider = provider
-            val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
-            // Same frame size the React Native benchmark decodes, so the engines see equal input.
+            // Ask the camera for its fastest fixed frame rate (60 where the sensor
+            // advertises it, else 30): a new code on the screen is captured sooner and
+            // delivered more often. Requesting 60 on a camera that cannot do it makes
+            // CameraX starve the analysis stream, hence the capability check.
+            val fps = fastestFixedFps()
+            val previewBuilder = Preview.Builder()
+            setTargetFps(previewBuilder, fps)
+            val preview = previewBuilder.build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
+
+            // A small analysis stream: 640x480 is plenty of pixels per module for a
+            // phone-screen QR at arm's length and zxing-cpp decodes it in a few ms,
+            // while a budget SoC can deliver it at the full camera rate (a 1440x1080
+            // stream ran at 11 fps on a Galaxy A15).
             val resolution = ResolutionSelector.Builder()
-                .setResolutionStrategy(ResolutionStrategy(Size(1280, 720), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
+                .setResolutionStrategy(ResolutionStrategy(Size(640, 480), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER))
                 .build()
-            val analysis = ImageAnalysis.Builder()
+            val analysisBuilder = ImageAnalysis.Builder()
                 .setResolutionSelector(resolution)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-                .build()
+            setTargetFps(analysisBuilder, fps)
+            val analysis = analysisBuilder.build()
             analysis.setAnalyzer(decodeExecutor) { image ->
                 if (finished) {
                     image.close()
@@ -134,6 +152,30 @@ class ZxingScannerView(
             provider.unbindAll()
             provider.bindToLifecycle(activity, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
         }, ContextCompat.getMainExecutor(activity))
+    }
+
+    /** 60 if the back camera advertises a fixed 60 fps AE range, else 30. */
+    private fun fastestFixedFps(): Int {
+        return try {
+            val manager = activity.getSystemService(android.content.Context.CAMERA_SERVICE) as CameraManager
+            val backId = manager.cameraIdList.firstOrNull { id ->
+                manager.getCameraCharacteristics(id).get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK
+            } ?: return 30
+            val ranges = manager.getCameraCharacteristics(backId).get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES) ?: return 30
+            if (ranges.any { it.lower >= 60 && it.upper >= 60 }) 60 else 30
+        } catch (_: Exception) {
+            30
+        }
+    }
+
+    @OptIn(ExperimentalCamera2Interop::class)
+    private fun setTargetFps(builder: Preview.Builder, fps: Int) {
+        Camera2Interop.Extender(builder).setCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(fps, fps))
+    }
+
+    @OptIn(ExperimentalCamera2Interop::class)
+    private fun setTargetFps(builder: ImageAnalysis.Builder, fps: Int) {
+        Camera2Interop.Extender(builder).setCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(fps, fps))
     }
 
     // MARK: Reporting

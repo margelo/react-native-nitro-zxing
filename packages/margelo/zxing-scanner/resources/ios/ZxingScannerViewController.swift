@@ -101,6 +101,7 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
             return
         }
         session.addInput(input)
+        tune(camera)
 
         let output = AVCaptureVideoDataOutput()
         output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange]
@@ -112,6 +113,37 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
         }
         session.addOutput(output)
         session.commitConfiguration()
+    }
+
+    /// The `.hd1280x720` preset settles on a 30 fps format on most iPhones. Pick the 720p
+    /// format that can do 60 so a new code on the screen is captured sooner, cap exposure so
+    /// a frame is not integrating for a whole 1/30 s, and keep focus near: the code is at
+    /// arm's length.
+    private func tune(_ camera: AVCaptureDevice) {
+        do {
+            try camera.lockForConfiguration()
+            if let format = camera.formats.first(where: { f in
+                let dims = CMVideoFormatDescriptionGetDimensions(f.formatDescription)
+                let fps = f.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 0
+                return dims.width == 1280 && dims.height == 720 && fps >= 60
+                    && CMFormatDescriptionGetMediaSubType(f.formatDescription) == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+            }) {
+                camera.activeFormat = format
+                camera.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 60)
+                camera.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 60)
+            }
+            if camera.isExposureModeSupported(.continuousAutoExposure) {
+                camera.activeMaxExposureDuration = CMTime(value: 1, timescale: 250)
+            }
+            if camera.isFocusModeSupported(.continuousAutoFocus) {
+                camera.focusMode = .continuousAutoFocus
+                if camera.isSmoothAutoFocusSupported { camera.isSmoothAutoFocusEnabled = false }
+                if camera.isAutoFocusRangeRestrictionSupported { camera.autoFocusRangeRestriction = .near }
+            }
+            camera.unlockForConfiguration()
+        } catch {
+            print("ZxingScanner: could not tune the camera: \(error)")
+        }
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
