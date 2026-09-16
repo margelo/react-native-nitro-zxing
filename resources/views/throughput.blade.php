@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>zxing throughput</title>
+    <title>SuperNative throughput</title>
     <style>
         body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-end; background: #000; color: #fff; font: 16px -apple-system, system-ui, sans-serif; padding: env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 24px); box-sizing: border-box; }
         .result { text-align: center; margin-bottom: 24px; }
@@ -25,7 +25,8 @@
     </div>
     <form method="post" action="/start">
         @csrf
-        <button type="submit">Start {{ $target }} QRs (zxing)</button>
+        <button type="submit">Open SuperNative camera</button>
     </form>
+    <p class="meta">Open the camera, aim at the QR display, then tap Start {{ $target }} QRs on the overlay.</p>
 </body>
 </html>

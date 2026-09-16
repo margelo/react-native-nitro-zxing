@@ -1,6 +1,6 @@
 {
     "php": {
-        "version": "8.5.10",
+        "version": "8.4.25",
         "icu": false
     }
 }

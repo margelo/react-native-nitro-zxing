@@ -4,19 +4,20 @@ namespace Margelo\ZxingScanner;
 
 class ZxingScanner
 {
-    /**
-     * Open the camera. Every decoded code fires a CodeScanned event; the overlay counts
-     * only the scans the app confirms back with confirm(), and RunCompleted fires once
-     * the confirmed count reaches $target.
-     */
+    /** Open the camera. The overlay Start button asks PHP to begin the timed run. */
     public function start(int $target = 1000): void
     {
         $this->call('ZxingScanner.Start', ['target' => $target]);
     }
 
-    public function confirm(): void
+    public function update(int $count, float $elapsedMs, string $phase, string $error = ''): void
     {
-        $this->call('ZxingScanner.Confirm');
+        $this->call('ZxingScanner.Update', [
+            'count' => $count,
+            'elapsed_ms' => $elapsedMs,
+            'phase' => $phase,
+            'error' => $error,
+        ]);
     }
 
     public function stop(): void

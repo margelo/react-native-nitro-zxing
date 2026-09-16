@@ -2,9 +2,12 @@ import AVFoundation
 import UIKit
 import ZXingCpp
 
-/// Full-screen camera that decodes QR codes with zxing-cpp and reports each new value to
-/// Laravel. Counting is driven by the app: it confirms scans back through the bridge, and
-/// the run ends when the confirmed count reaches the target.
+/// Full-screen camera that decodes QR codes with zxing-cpp.
+///
+/// With a `reportURL` the whole loop stays native: each new value is POSTed to the QR server
+/// on a keep-alive URLSession and counted as soon as the server answers `ok`. PHP only starts
+/// the run and receives the final `RunCompleted`. Without one, every decode is handed to
+/// Laravel as `CodeScanned` and the app confirms scans back through the bridge.
 final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
     static weak var current: ZxingScannerViewController?
 
@@ -12,13 +15,24 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
     private static let runCompletedEvent = "Margelo\\ZxingScanner\\Events\\RunCompleted"
 
     private let target: Int
+    private let reportURL: URL?
+    /// One session, one host, connections reused: a report is a single round trip.
+    private let reporter: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 2
+        config.timeoutIntervalForResource = 4
+        config.waitsForConnectivity = false
+        return URLSession(configuration: config)
+    }()
     private let session = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "zxing.scanner.session")
     private let decodeQueue = DispatchQueue(label: "zxing.scanner.decode")
     private let reader: ZXIBarcodeReader
     private var lastSent = ""
 
-    private var startedAt = Date()
+    /// The clock starts on the first confirmed scan, so camera warm-up and aiming are not
+    /// part of the run, only the loop itself.
+    private var startedAt: Date?
     private var confirmed = 0
     private var finished = false
     private var ticker: Timer?
@@ -28,8 +42,9 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
     private let elapsedLabel = UILabel()
     private let statusLabel = UILabel()
 
-    init(target: Int) {
+    init(target: Int, reportURL: URL? = nil) {
         self.target = target
+        self.reportURL = reportURL
         let options = ZXIReaderOptions()
         options.formats = [NSNumber(value: ZXIFormat.QR_CODE.rawValue)]
         options.tryHarder = false
@@ -60,7 +75,7 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        startedAt = Date()
+        warmReporter()
         sessionQueue.async { self.session.startRunning() }
         ticker = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             self?.renderElapsed()
@@ -87,6 +102,7 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
             return
         }
         session.addInput(input)
+        tune(camera)
 
         let output = AVCaptureVideoDataOutput()
         output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange]
@@ -100,6 +116,37 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
         session.commitConfiguration()
     }
 
+    /// The `.hd1280x720` preset settles on a 30 fps format on most iPhones. Pick the 720p
+    /// format that can do 60 so a new code on the screen is captured sooner, cap exposure so
+    /// a frame is not integrating for a whole 1/30 s, and keep focus near: the code is at
+    /// arm's length.
+    private func tune(_ camera: AVCaptureDevice) {
+        do {
+            try camera.lockForConfiguration()
+            if let format = camera.formats.first(where: { f in
+                let dims = CMVideoFormatDescriptionGetDimensions(f.formatDescription)
+                let fps = f.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 0
+                return dims.width == 1280 && dims.height == 720 && fps >= 60
+                    && CMFormatDescriptionGetMediaSubType(f.formatDescription) == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+            }) {
+                camera.activeFormat = format
+                camera.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 60)
+                camera.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 60)
+            }
+            if camera.isExposureModeSupported(.continuousAutoExposure) {
+                camera.activeMaxExposureDuration = CMTime(value: 1, timescale: 250)
+            }
+            if camera.isFocusModeSupported(.continuousAutoFocus) {
+                camera.focusMode = .continuousAutoFocus
+                if camera.isSmoothAutoFocusSupported { camera.isSmoothAutoFocusEnabled = false }
+                if camera.isAutoFocusRangeRestrictionSupported { camera.autoFocusRangeRestriction = .near }
+            }
+            camera.unlockForConfiguration()
+        } catch {
+            print("ZxingScanner: could not tune the camera: \(error)")
+        }
+    }
+
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard !finished, let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         guard let result = (try? reader.read(pixelBuffer))?.first else { return }
@@ -108,13 +155,41 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
         if value == lastSent { return }
         lastSent = value
 
-        LaravelBridge.shared.send?(Self.codeScannedEvent, ["data": value])
+        if reportURL != nil {
+            report(value)
+        } else {
+            LaravelBridge.shared.send?(Self.codeScannedEvent, ["data": value])
+        }
+    }
+
+    // MARK: - Reporting
+
+    /// Open the connection before the first code so it never pays the handshake.
+    private func warmReporter() {
+        guard let url = reportURL else { return }
+        reporter.dataTask(with: URLRequest(url: url)).resume()
+    }
+
+    /// Same request and acceptance rule the Laravel relay used, minus the PHP hop.
+    private func report(_ value: String) {
+        guard let url = reportURL else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["value": value])
+        reporter.dataTask(with: request) { [weak self] data, _, _ in
+            guard let data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  json["ok"] as? Bool == true else { return }
+            DispatchQueue.main.async { self?.confirm() }
+        }.resume()
     }
 
     // MARK: - Progress
 
     func confirm() {
         guard !finished else { return }
+        if confirmed == 0 { startedAt = Date() }
         confirmed += 1
         countLabel.text = "\(confirmed)"
         if confirmed >= target {
@@ -125,14 +200,18 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
     private func finish() {
         finished = true
         ticker?.invalidate()
-        let elapsedMs = Date().timeIntervalSince(startedAt) * 1000
+        let elapsedMs = elapsed() * 1000
         renderElapsed()
         statusLabel.text = "Done"
         LaravelBridge.shared.send?(Self.runCompletedEvent, ["count": confirmed, "elapsedMs": elapsedMs])
     }
 
+    private func elapsed() -> TimeInterval {
+        startedAt.map { Date().timeIntervalSince($0) } ?? 0
+    }
+
     private func renderElapsed() {
-        elapsedLabel.text = String(format: "%.1fs", Date().timeIntervalSince(startedAt))
+        elapsedLabel.text = String(format: "%.1fs", elapsed())
     }
 
     // MARK: - Overlay
