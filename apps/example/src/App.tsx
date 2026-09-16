@@ -7,6 +7,7 @@ import { VisionCamera } from 'react-native-vision-camera'
 import { BenchmarkScreen } from './screens/BenchmarkScreen'
 import { PermissionsScreen } from './screens/PermissionsScreen'
 import { ScanScreen } from './screens/ScanScreen'
+import { ThroughputScreen } from './screens/ThroughputScreen'
 
 const RootStack = createNativeStackNavigator({
   initialRouteName:
@@ -23,6 +24,12 @@ const RootStack = createNativeStackNavigator({
     },
     Benchmark: {
       screen: BenchmarkScreen,
+      options: {
+        orientation: 'portrait_up',
+      },
+    },
+    Throughput: {
+      screen: ThroughputScreen,
       options: {
         orientation: 'portrait_up',
       },

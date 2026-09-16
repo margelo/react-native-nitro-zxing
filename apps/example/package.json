@@ -9,6 +9,7 @@
     "bundle-install": "bundle install",
     "pods": "cd ios && bundle exec pod install",
     "start": "react-native start --client-logs",
+    "qr-server": "bun scripts/qr-server.ts",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain"
   },
   "dependencies": {

@@ -148,6 +148,13 @@ export function ScanScreen() {
           >
             <Text style={styles.secondaryText}>Benchmark</Text>
           </Pressable>
+          <Pressable
+            style={[styles.button, styles.secondary]}
+            onPress={() => navigation.navigate('Throughput')}
+            testID="go-throughput"
+          >
+            <Text style={styles.secondaryText}>Throughput</Text>
+          </Pressable>
         </View>
       </View>
     </View>
