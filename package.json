@@ -7,7 +7,8 @@
   "author": "Margelo",
   "workspaces": [
     "packages/react-native-nitro-zxing",
-    "apps/example"
+    "apps/example",
+    "apps/example/throughput-native"
   ],
   "scripts": {
     "bootstrap": "bun i && bun run build && bun example bundle-install && bun example pods",

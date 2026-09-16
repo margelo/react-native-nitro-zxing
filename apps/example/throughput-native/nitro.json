@@ -1,0 +1,22 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["throughput"],
+  "ios": { "iosModuleName": "ExampleThroughput" },
+  "android": {
+    "androidNamespace": ["throughput"],
+    "androidCxxLibName": "ExampleThroughput"
+  },
+  "autolinking": {
+    "ThroughputBenchmark": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridThroughputBenchmark"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridThroughputBenchmark"
+      }
+    }
+  },
+  "ignorePaths": ["**/node_modules"]
+}

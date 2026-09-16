@@ -1,0 +1,31 @@
+apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply from: '../nitrogen/generated/android/ExampleThroughput+autolinking.gradle'
+
+android {
+  namespace 'com.margelo.nitro.throughput'
+  compileSdk rootProject.ext.compileSdkVersion
+  ndkVersion rootProject.ext.ndkVersion
+  defaultConfig {
+    minSdk rootProject.ext.minSdkVersion
+    externalNativeBuild {
+      cmake {
+        arguments '-DANDROID_STL=c++_shared'
+        cppFlags '-frtti -fexceptions'
+        abiFilters(*((rootProject.findProperty('reactNativeArchitectures') ?: 'arm64-v8a').split(',')))
+      }
+    }
+  }
+  externalNativeBuild { cmake { path 'CMakeLists.txt' } }
+  buildFeatures { prefab true }
+  packagingOptions {
+    jniLibs.excludes += ['**/libc++_shared.so', '**/libNitroModules.so', '**/libVisionCamera.so', '**/libfbjni.so', '**/libjsi.so', '**/libreactnative.so']
+  }
+}
+
+dependencies {
+  implementation 'com.facebook.react:react-android'
+  implementation project(':react-native-nitro-modules')
+  implementation project(':react-native-vision-camera')
+  implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+}

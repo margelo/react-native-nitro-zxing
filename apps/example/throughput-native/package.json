@@ -1,0 +1,19 @@
+{
+  "name": "example-throughput-native",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Native reporting and camera tuning for the example throughput benchmark",
+  "main": "src/index.ts",
+  "react-native": "src/index.ts",
+  "scripts": {
+    "specs": "nitrogen"
+  },
+  "peerDependencies": {
+    "react-native": "*",
+    "react-native-nitro-modules": "*",
+    "react-native-vision-camera": "*"
+  },
+  "devDependencies": {
+    "nitrogen": "0.37.0"
+  }
+}
