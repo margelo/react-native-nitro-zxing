@@ -13,22 +13,32 @@ composer require margelo/zxing-scanner
 ```php
 use Margelo\ZxingScanner\Facades\ZxingScanner;
 
-// Execute functionality
-$result = ZxingScanner::execute(['option1' => 'value']);
+// Closed loop, fully native: the scanner POSTs {"value": code} to the report URL
+// over one keep-alive connection and counts every reply whose "ok" is true.
+// PHP runs once to start the run and once when RunCompleted arrives.
+ZxingScanner::start(1000, config('services.qr_server.url').'/scan');
 
-// Get status
-$status = ZxingScanner::getStatus();
+// Or let the app decide what counts: every decode fires CodeScanned, and the
+// app confirms the ones it accepts. This costs a PHP request per code.
+ZxingScanner::start(1000);
+ZxingScanner::confirm();
+
+ZxingScanner::stop();
 ```
+
+The clock starts on the first confirmed scan, not when the camera opens.
 
 ## Listening for Events
 
 ```php
-use Livewire\Attributes\On;
+use Margelo\ZxingScanner\Events\RunCompleted;
 
-#[On('native:Margelo\ZxingScanner\Events\ZxingScannerCompleted')]
-public function handleZxingScannerCompleted($result, $id = null)
+class RecordRun
 {
-    // Handle the event
+    public function handle(RunCompleted $event): void
+    {
+        // $event->count, $event->elapsedMs
+    }
 }
 ```
 

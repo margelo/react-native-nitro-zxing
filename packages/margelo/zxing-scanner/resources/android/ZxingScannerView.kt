@@ -27,13 +27,21 @@ import org.json.JSONObject
 import zxingcpp.BarcodeReader
 
 /**
- * Full-screen camera overlay that decodes QR codes with zxing-cpp and reports each new value
- * to Laravel. It lives inside the host Activity rather than its own, so the WebView underneath
- * stays resumed - a backgrounded WebView drops the fetches that carry events to PHP.
- * Counting is driven by the app: it confirms scans back through the bridge, and the run ends
- * when the confirmed count reaches the target.
+ * Full-screen camera overlay that decodes QR codes with zxing-cpp.
+ *
+ * With a `reportUrl` the whole loop stays native: each new value is POSTed to the QR server
+ * over one keep-alive connection and counted as soon as the server answers `ok`. PHP only
+ * starts the run and receives the final `RunCompleted`. Without a report URL every decode is
+ * handed to Laravel as `CodeScanned` and the app confirms scans back through the bridge.
+ *
+ * It lives inside the host Activity rather than its own, so the WebView underneath stays
+ * resumed - a backgrounded WebView drops the fetches that carry events to PHP.
  */
-class ZxingScannerView(private val activity: FragmentActivity, private val target: Int) : FrameLayout(activity) {
+class ZxingScannerView(
+    private val activity: FragmentActivity,
+    private val target: Int,
+    reportUrl: String? = null,
+) : FrameLayout(activity) {
     companion object {
         private const val CODE_SCANNED = "Margelo\\ZxingScanner\\Events\\CodeScanned"
         private const val RUN_COMPLETED = "Margelo\\ZxingScanner\\Events\\RunCompleted"
@@ -50,6 +58,11 @@ class ZxingScannerView(private val activity: FragmentActivity, private val targe
         options.maxNumberOfSymbols = 1
     }
     private var lastSent = ""
+
+    // Native reporting: one thread so reports leave in scan order, one socket so
+    // they never pay a connect.
+    private val reporter = reportUrl?.let { KeepAliveHttp(it) }
+    private val reportExecutor = Executors.newSingleThreadExecutor()
 
     private var startedAt = System.currentTimeMillis()
     private var confirmed = 0
@@ -72,6 +85,7 @@ class ZxingScannerView(private val activity: FragmentActivity, private val targe
         content.addView(this, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         startedAt = System.currentTimeMillis()
         ticker.post(tick)
+        reporter?.let { http -> reportExecutor.execute { http.warm() } }
         startCamera()
     }
 
@@ -79,6 +93,8 @@ class ZxingScannerView(private val activity: FragmentActivity, private val targe
         ticker.removeCallbacks(tick)
         cameraProvider?.unbindAll()
         decodeExecutor.shutdown()
+        reportExecutor.shutdown()
+        reporter?.close()
         (parent as? ViewGroup)?.removeView(this)
         if (current === this) current = null
     }
@@ -108,12 +124,25 @@ class ZxingScannerView(private val activity: FragmentActivity, private val targe
                 val value = image.use { reader.read(it).firstOrNull()?.text }
                 if (value != null && value != lastSent) {
                     lastSent = value
-                    NativeElementBridge.sendNativeEvent(CODE_SCANNED, JSONObject().put("data", value).toString())
+                    if (reporter != null) {
+                        reportExecutor.execute { report(reporter, value) }
+                    } else {
+                        NativeElementBridge.sendNativeEvent(CODE_SCANNED, JSONObject().put("data", value).toString())
+                    }
                 }
             }
             provider.unbindAll()
             provider.bindToLifecycle(activity, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
         }, ContextCompat.getMainExecutor(activity))
+    }
+
+    // MARK: Reporting
+
+    /** Same request and acceptance rule the Laravel relay used, minus the PHP hop. */
+    private fun report(http: KeepAliveHttp, value: String) {
+        val reply = http.post(JSONObject().put("value", value).toString()) ?: return
+        val ok = try { JSONObject(reply).optBoolean("ok", false) } catch (_: Exception) { false }
+        if (ok) post { confirm() }
     }
 
     // MARK: Progress

@@ -11,7 +11,11 @@ import com.nativephp.mobile.bridge.BridgeResponse
 
 object ZxingScannerFunctions {
 
-    /** Opens the live scanner over the current screen. `target` is the confirmed-scan count that ends the run. */
+    /**
+     * Opens the live scanner over the current screen. `target` is the confirmed-scan count that
+     * ends the run; with a `report_url` the scanner posts each code there itself and counts the
+     * ones the server accepts, so no PHP request runs during the benchmark.
+     */
     class Start(private val activity: FragmentActivity) : BridgeFunction {
         override fun execute(parameters: Map<String, Any>): Map<String, Any> {
             if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -20,11 +24,12 @@ object ZxingScannerFunctions {
             }
 
             val target = (parameters["target"] as? Number)?.toInt() ?: 1000
+            val reportUrl = (parameters["report_url"] as? String)?.takeIf { it.isNotBlank() }
             activity.runOnUiThread {
                 ZxingScannerView.current?.close()
-                ZxingScannerView(activity, target).show()
+                ZxingScannerView(activity, target, reportUrl).show()
             }
-            return BridgeResponse.success(mapOf("target" to target))
+            return BridgeResponse.success(mapOf("target" to target, "report_url" to (reportUrl ?: "")))
         }
     }
 

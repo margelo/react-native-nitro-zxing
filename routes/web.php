@@ -18,7 +18,7 @@ Route::get('/', function () {
 Route::post('/start', function () {
     Http::timeout(2)->post(config('services.qr_server.url').'/reset');
     Cache::forget('last_run');
-    ZxingScanner::start(TARGET);
+    ZxingScanner::start(TARGET, config('services.qr_server.url').'/scan');
 
     return redirect('/');
 });
