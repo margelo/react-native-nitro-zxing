@@ -27,6 +27,7 @@ export function ThroughputScreen() {
   const current = useRef<ThroughputReporter | undefined>(undefined)
   const generation = useRef(0)
   const starting = useRef(false)
+  const mounted = useRef(true)
   const running = preparing || reporter != null
 
   const stop = useCallback(() => {
@@ -34,19 +35,21 @@ export function ThroughputScreen() {
     current.current?.stop()
     current.current = undefined
     setReporter(undefined)
-    setPreparing(false)
+    // Do not offer another Start until the canceled setup request has finished.
+    setPreparing(starting.current)
   }, [])
 
   useEffect(() => {
     if (!isActive || !isFocused) stop()
   }, [isActive, isFocused, stop])
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
       generation.current += 1
       current.current?.stop()
-    },
-    [],
-  )
+    }
+  }, [])
 
   const fail = useCallback(
     (message: string) => {
@@ -55,10 +58,18 @@ export function ThroughputScreen() {
     },
     [stop],
   )
+  const cameraError = useCallback(
+    (message: string) => {
+      // A queued error from a disposed worklet must not stop a later run.
+      if (reporter != null && current.current === reporter) fail(message)
+    },
+    [reporter, fail],
+  )
 
   useEffect(() => {
     if (reporter == null) return
     const poll = () => {
+      if (current.current !== reporter) return
       const next = reporter.getSnapshot()
       setSnapshot(next)
       if (next.state !== 'running') {
@@ -95,7 +106,7 @@ export function ThroughputScreen() {
       if (id === generation.current) setError(String(error))
     } finally {
       starting.current = false
-      if (id === generation.current) setPreparing(false)
+      if (mounted.current) setPreparing(false)
     }
   }, [server])
 
@@ -105,7 +116,7 @@ export function ThroughputScreen() {
         <ThroughputCamera
           reporter={reporter}
           engine={engine}
-          onError={fail}
+          onError={cameraError}
           onConfiguration={setCameraSettings}
         />
       )}

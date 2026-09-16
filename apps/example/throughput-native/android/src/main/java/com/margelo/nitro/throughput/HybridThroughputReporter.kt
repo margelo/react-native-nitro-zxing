@@ -1,6 +1,7 @@
 package com.margelo.nitro.throughput
 
 import android.os.SystemClock
+import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -42,6 +43,7 @@ class HybridThroughputReporter(
   private var elapsedMs = 0.0
   private var lastSubmitted: String? = null
   private var errorMessage: String? = null
+  private var pendingCall: Call? = null
 
   fun prepare() {
     check(JSONObject(request("reset", "POST", "{}")).getBoolean("ok")) { "Server reset failed" }
@@ -92,6 +94,8 @@ class HybridThroughputReporter(
       }
       // Prevent submit() racing executor shutdown.
       reports.shutdown()
+      // Cancel even a call created just before stop(), before execute() registers it.
+      pendingCall?.cancel()
     }
     releaseTransport()
   }
@@ -117,9 +121,18 @@ class HybridThroughputReporter(
         .url(baseURL.newBuilder().addPathSegment(path).build())
         .method(method, body)
         .build()
-    return client.newCall(request).execute().use { response ->
-      if (!response.isSuccessful) throw IOException("HTTP ${response.code} from /$path")
-      response.body?.string() ?: throw IOException("Empty response from /$path")
+    val call =
+      synchronized(lock) {
+        check(state == ThroughputState.RUNNING) { "Run stopped" }
+        client.newCall(request).also { pendingCall = it }
+      }
+    try {
+      return call.execute().use { response ->
+        if (!response.isSuccessful) throw IOException("HTTP ${response.code} from /$path")
+        response.body?.string() ?: throw IOException("Empty response from /$path")
+      }
+    } finally {
+      synchronized(lock) { pendingCall = null }
     }
   }
 }
