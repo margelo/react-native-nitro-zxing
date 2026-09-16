@@ -70,7 +70,9 @@ class ZxingScannerView(
     private val reporter = reportUrl?.let { KeepAliveHttp(it) }
     private val reportExecutor = Executors.newSingleThreadExecutor()
 
-    private var startedAt = System.currentTimeMillis()
+    // The clock starts on the first confirmed scan, so camera warm-up and aiming
+    // are not part of the run, only the loop itself.
+    private var startedAt: Long? = null
     private var confirmed = 0
     private var finished = false
     private val ticker = Handler(Looper.getMainLooper())
@@ -89,7 +91,6 @@ class ZxingScannerView(
         current = this
         val content = activity.findViewById<ViewGroup>(android.R.id.content)
         content.addView(this, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-        startedAt = System.currentTimeMillis()
         ticker.post(tick)
         reporter?.let { http -> reportExecutor.execute { http.warm() } }
         startCamera()
@@ -191,6 +192,7 @@ class ZxingScannerView(
 
     fun confirm() {
         if (finished) return
+        if (confirmed == 0) startedAt = System.currentTimeMillis()
         confirmed += 1
         countLabel.text = confirmed.toString()
         if (confirmed >= target) finishRun()
@@ -199,7 +201,7 @@ class ZxingScannerView(
     private fun finishRun() {
         finished = true
         ticker.removeCallbacks(tick)
-        val elapsedMs = (System.currentTimeMillis() - startedAt).toDouble()
+        val elapsedMs = elapsedMs()
         renderElapsed()
         statusLabel.text = "Done"
         NativeElementBridge.sendNativeEvent(
@@ -215,8 +217,10 @@ class ZxingScannerView(
         }
     }
 
+    private fun elapsedMs(): Double = startedAt?.let { (System.currentTimeMillis() - it).toDouble() } ?: 0.0
+
     private fun renderElapsed() {
-        elapsedLabel.text = String.format("%.1fs", (System.currentTimeMillis() - startedAt) / 1000.0)
+        elapsedLabel.text = String.format("%.1fs", elapsedMs() / 1000.0)
     }
 
     // MARK: Overlay

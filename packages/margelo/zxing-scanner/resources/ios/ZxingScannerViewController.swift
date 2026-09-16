@@ -30,7 +30,9 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
     private let reader: ZXIBarcodeReader
     private var lastSent = ""
 
-    private var startedAt = Date()
+    /// The clock starts on the first confirmed scan, so camera warm-up and aiming are not
+    /// part of the run, only the loop itself.
+    private var startedAt: Date?
     private var confirmed = 0
     private var finished = false
     private var ticker: Timer?
@@ -73,7 +75,6 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        startedAt = Date()
         warmReporter()
         sessionQueue.async { self.session.startRunning() }
         ticker = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
@@ -188,6 +189,7 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
 
     func confirm() {
         guard !finished else { return }
+        if confirmed == 0 { startedAt = Date() }
         confirmed += 1
         countLabel.text = "\(confirmed)"
         if confirmed >= target {
@@ -198,14 +200,18 @@ final class ZxingScannerViewController: UIViewController, AVCaptureVideoDataOutp
     private func finish() {
         finished = true
         ticker?.invalidate()
-        let elapsedMs = Date().timeIntervalSince(startedAt) * 1000
+        let elapsedMs = elapsed() * 1000
         renderElapsed()
         statusLabel.text = "Done"
         LaravelBridge.shared.send?(Self.runCompletedEvent, ["count": confirmed, "elapsedMs": elapsedMs])
     }
 
+    private func elapsed() -> TimeInterval {
+        startedAt.map { Date().timeIntervalSince($0) } ?? 0
+    }
+
     private func renderElapsed() {
-        elapsedLabel.text = String(format: "%.1fs", Date().timeIntervalSince(startedAt))
+        elapsedLabel.text = String(format: "%.1fs", elapsed())
     }
 
     // MARK: - Overlay
