@@ -3,6 +3,7 @@
 namespace Margelo\ZxingScanner;
 
 use Illuminate\Support\ServiceProvider;
+use Margelo\ZxingScanner\Commands\BuildAndroidCommand;
 use Margelo\ZxingScanner\Commands\CopyAssetsCommand;
 
 class ZxingScannerServiceProvider extends ServiceProvider
@@ -19,6 +20,7 @@ class ZxingScannerServiceProvider extends ServiceProvider
         // Register plugin hook commands
         if ($this->app->runningInConsole()) {
             $this->commands([
+                BuildAndroidCommand::class,
                 CopyAssetsCommand::class,
             ]);
         }

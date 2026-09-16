@@ -247,6 +247,7 @@ return [
     */
 
     'cleanup_exclude_files' => [
+        'packages/margelo/zxing-scanner/zxing-cpp',
         'storage/framework/sessions',
         'storage/framework/cache',
         'storage/framework/testing',
