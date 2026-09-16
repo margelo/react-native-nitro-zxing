@@ -1,0 +1,105 @@
+{
+    "name": "margelo/zxing-scanner",
+    "version": "1.0.0",
+    "description": "Live QR scanning with zxing-cpp for NativePHP Mobile",
+    "namespace": "ZxingScanner",
+    "keywords": [],
+    "category": "utilities",
+    "license": "MIT",
+    "pricing": {
+        "type": "free"
+    },
+    "author": {
+        "name": "Margelo",
+        "email": "hello@margelo.io",
+        "url": "https://margelo.io"
+    },
+    "homepage": "",
+    "repository": "",
+    "funding": [],
+    "platforms": [
+        "android",
+        "ios"
+    ],
+    "icon": "resources/icon.png",
+    "screenshots": [],
+    "bridge_functions": [
+        {
+            "name": "ZxingScanner.Start",
+            "android": "com.margelo.plugins.zxing_scanner.ZxingScannerFunctions.Start",
+            "ios": "ZxingScannerFunctions.Start",
+            "description": "Open the camera and start decoding QR codes with zxing-cpp"
+        },
+        {
+            "name": "ZxingScanner.Confirm",
+            "android": "com.margelo.plugins.zxing_scanner.ZxingScannerFunctions.Confirm",
+            "ios": "ZxingScannerFunctions.Confirm",
+            "description": "Count one server-confirmed scan on the live overlay"
+        },
+        {
+            "name": "ZxingScanner.Stop",
+            "android": "com.margelo.plugins.zxing_scanner.ZxingScannerFunctions.Stop",
+            "ios": "ZxingScannerFunctions.Stop",
+            "description": "Close the camera"
+        }
+    ],
+    "android": {
+        "min_version": 24,
+        "permissions": [
+            "android.permission.CAMERA"
+        ],
+        "features": [
+            "android.hardware.camera"
+        ],
+        "repositories": [],
+        "dependencies": {
+            "implementation": [
+                "androidx.camera:camera-core:1.4.2",
+                "androidx.camera:camera-camera2:1.4.2",
+                "androidx.camera:camera-lifecycle:1.4.2",
+                "androidx.camera:camera-view:1.4.2",
+                "io.github.zxing-cpp:android:2.3.0"
+            ]
+        },
+        "activities": [],
+        "services": [],
+        "receivers": [],
+        "providers": []
+    },
+    "ios": {
+        "min_version": "15.0",
+        "permissions": [],
+        "repositories": [],
+        "info_plist": {
+            "NSCameraUsageDescription": "The camera is used to scan QR codes.",
+            "NSAppTransportSecurity": {
+                "NSAllowsArbitraryLoads": true
+            }
+        },
+        "dependencies": {
+            "swift_packages": [
+                {
+                    "url": "https://github.com/zxing-cpp/zxing-cpp.git",
+                    "version": "3.1.1",
+                    "products": [
+                        "ZXingCpp"
+                    ]
+                }
+            ],
+            "pods": []
+        }
+    },
+    "assets": {
+        "android": [],
+        "ios": []
+    },
+    "secrets": [],
+    "events": [
+        "Margelo\\ZxingScanner\\Events\\CodeScanned",
+        "Margelo\\ZxingScanner\\Events\\RunCompleted"
+    ],
+    "service_provider": "Margelo\\ZxingScanner\\ZxingScannerServiceProvider",
+    "hooks": {
+        "copy_assets": "nativephp:zxing-scanner:copy-assets"
+    }
+}

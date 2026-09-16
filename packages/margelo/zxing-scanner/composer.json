@@ -1,0 +1,42 @@
+{
+    "name": "margelo/zxing-scanner",
+    "description": "Live QR scanning with zxing-cpp for NativePHP Mobile",
+    "type": "nativephp-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Margelo",
+            "email": "hello@margelo.io"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "nativephp/mobile": "^3.0|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Margelo\\ZxingScanner\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Margelo\\ZxingScanner\\ZxingScannerServiceProvider"
+            ]
+        },
+        "nativephp": {
+            "manifest": "nativephp.json"
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0"
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
