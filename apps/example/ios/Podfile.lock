@@ -1,4 +1,28 @@
 PODS:
+  - ExampleThroughput (0.0.0):
+    - hermes-engine
+    - NitroModules
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - VisionCamera
+    - Yoga
   - FBLazyVector (0.85.3)
   - GoogleDataTransport (10.1.1):
     - nanopb (~> 3.30910.0)
@@ -2174,6 +2198,7 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
+  - ExampleThroughput (from `../../../node_modules/example-throughput-native`)
   - FBLazyVector (from `../../../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../../../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - NitroImage (from `../../../node_modules/react-native-nitro-image`)
@@ -2274,6 +2299,8 @@ SPEC REPOS:
     - PromisesObjC
 
 EXTERNAL SOURCES:
+  ExampleThroughput:
+    :path: "../../../node_modules/example-throughput-native"
   FBLazyVector:
     :path: "../../../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2443,13 +2470,14 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  ExampleThroughput: cee29dab7c0f182a0b2944428ddb03e94c3ed380
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d
   GoogleDataTransport: a24e58982ab3ba2f64d79613e027fe7f57e88539
   GoogleMLKit: b1eee21a41c57704fe72483b15c85cb2c0cd7444
   GoogleToolboxForMac: d1a2cbf009c453f4d6ded37c105e2f67a32206d8
   GoogleUtilities: 766ace00c6b10d8148408f329d10c4f051931850
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  hermes-engine: a62b8b2b43981b41c8bc9eb511d82f4519af4c80
+  hermes-engine: 59df0bed3059e0498e04971c27d45e448290f54d
   MLImage: 0de5c6c2bf9e93b80ef752e2797f0836f03b58c0
   MLKitBarcodeScanning: 39de223e7b1b8a8fbf10816a536dd292d8a39343
   MLKitCommon: 47d47b50a031d00db62f1b0efe5a1d8b09a3b2e6
@@ -2466,7 +2494,7 @@ SPEC CHECKSUMS:
   React: e2dc35338068bbd299c66f043ae0d7f25de8499e
   React-callinvoker: 28b25d21b124c26cebaea713ba7d801b9351dc48
   React-Core: 02ed7d2ffb70437bdf2aba074a13078a7b0b9ff0
-  React-Core-prebuilt: 857f0345f21ff67ba94c04670bdaed7c8cc5d278
+  React-Core-prebuilt: c59aea7a83c520fa9528f60c2f48819d9031d9e0
   React-CoreModules: b3a5a42dadcde3b5d47b325bd912eb2ced89e146
   React-cxxreact: fe8f88dda044e5905e99a00f41b7a874c3908716
   React-debug: 92944dc4d89f56d640e75498266cbde557a48189
@@ -2529,7 +2557,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 25c9c516839be2c5e3d3344f95dc7da5f7e63fc2
   ReactCodegen: dfe41c3f92bdf782bcf9b2c9d7c12cb9cfd82cb7
   ReactCommon: 7dfc3250793bf36cf221096ff59e1179e13eef7f
-  ReactNativeDependencies: 2aa427531e6a78f4736095dc55288dc4556ad18b
+  ReactNativeDependencies: 8669ee863ec5d24af6c6d380abcd836b32a2f781
   RNScreens: de068bbd7d91b820fedac25c597d4b14830de74b
   RNWorklets: 04a35c45bd72d24914cbaf24bdfa4e30e1eab2df
   VisionCamera: f84550cffbbf23f3cac7a3d1d2e66e5098a4e8eb

@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.13)
+project(ExampleThroughput)
+set(CMAKE_CXX_STANDARD 20)
+add_library(ExampleThroughput SHARED src/main/cpp/cpp-adapter.cpp)
+include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/ExampleThroughput+autolinking.cmake)
+find_package(react-native-vision-camera REQUIRED)
+target_link_libraries(ExampleThroughput react-native-vision-camera::VisionCamera android log)

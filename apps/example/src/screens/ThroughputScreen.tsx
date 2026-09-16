@@ -1,131 +1,127 @@
 import { useIsFocused, useNavigation } from '@react-navigation/native'
+import type {
+  ThroughputReporter,
+  ThroughputSnapshot,
+} from 'example-throughput-native'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import { useBarcodeScanner as useZXingBarcodeScanner } from 'react-native-nitro-zxing'
-import type { Frame } from 'react-native-vision-camera'
-import {
-  Camera,
-  useCameraDevice,
-  useFrameOutput,
-} from 'react-native-vision-camera'
-import { useBarcodeScanner as useMLKitBarcodeScanner } from 'react-native-vision-camera-barcode-scanner'
-import { scheduleOnRN } from 'react-native-worklets'
 import { useIsActive } from '../hooks/useIsActive'
+import { benchmark } from '../throughput/benchmark'
+import { type Engine, ThroughputCamera } from '../throughput/ThroughputCamera'
 
-type Engine = 'zxing' | 'mlkit'
 const TARGET = 1000
-// LAN address of the machine running `bun example qr-server`.
 const DEFAULT_SERVER = 'http://192.168.1.12:3000'
-
-const delay = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms)
-  })
+const EMPTY: ThroughputSnapshot = { state: 'stopped', count: 0, elapsedMs: 0 }
 
 export function ThroughputScreen() {
   const navigation = useNavigation()
-  const device = useCameraDevice('back')
-  const isAppActive = useIsActive()
+  const isActive = useIsActive()
   const isFocused = useIsFocused()
-  const isActive = isAppActive && isFocused
-  const zxing = useZXingBarcodeScanner({ barcodeFormats: ['qr-code'] })
-  const mlkit = useMLKitBarcodeScanner({ barcodeFormats: ['qr-code'] })
-
   const [server, setServer] = useState(DEFAULT_SERVER)
   const [engine, setEngine] = useState<Engine>('zxing')
-  const [running, setRunning] = useState(false)
-  const [count, setCount] = useState(0)
-  const [elapsed, setElapsed] = useState(0)
-  const [results, setResults] = useState<Partial<Record<Engine, number>>>({})
+  const [preparing, setPreparing] = useState(false)
+  const [reporter, setReporter] = useState<ThroughputReporter>()
+  const [snapshot, setSnapshot] = useState(EMPTY)
   const [error, setError] = useState('')
-  const run = useRef({ active: false, lastSent: '', count: 0 })
+  const [cameraSettings, setCameraSettings] = useState('')
+  const current = useRef<ThroughputReporter | undefined>(undefined)
+  const generation = useRef(0)
+  const starting = useRef(false)
+  const mounted = useRef(true)
+  const running = preparing || reporter != null
 
-  useEffect(
-    () => () => {
-      run.current.active = false
+  const stop = useCallback(() => {
+    generation.current += 1
+    current.current?.stop()
+    current.current = undefined
+    setReporter(undefined)
+    // Do not offer another Start until the canceled setup request has finished.
+    setPreparing(starting.current)
+  }, [])
+
+  useEffect(() => {
+    if (!isActive || !isFocused) stop()
+  }, [isActive, isFocused, stop])
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      generation.current += 1
+      current.current?.stop()
+    }
+  }, [])
+
+  const fail = useCallback(
+    (message: string) => {
+      setError(message)
+      stop()
     },
-    [],
+    [stop],
+  )
+  const cameraError = useCallback(
+    (message: string) => {
+      // A queued error from a disposed worklet must not stop a later run.
+      if (reporter != null && current.current === reporter) fail(message)
+    },
+    [reporter, fail],
   )
 
-  const onCode = useCallback(
-    (value: string) => {
-      const r = run.current
-      if (!r.active || value === r.lastSent) return
-      r.lastSent = value
-      fetch(`${server}/scan`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ value }),
-      })
-        .then((res) => res.json() as Promise<{ ok: boolean }>)
-        .then(({ ok }) => {
-          if (ok && r.active) {
-            r.count += 1
-            setCount(r.count)
-          }
-        })
-        .catch((e) => setError(String(e)))
-    },
-    [server],
-  )
-
-  const onFrame = useCallback(
-    (frame: Frame) => {
-      'worklet'
-      const scanner = engine === 'zxing' ? zxing : mlkit
-      const codes = scanner.scanCodes(frame)
-      frame.dispose()
-      const value = codes[0]?.displayValue ?? codes[0]?.rawValue
-      if (value != null) scheduleOnRN(onCode, value)
-    },
-    [engine, zxing, mlkit, onCode],
-  )
-
-  const frameOutput = useFrameOutput({ pixelFormat: 'yuv', onFrame })
+  useEffect(() => {
+    if (reporter == null) return
+    const poll = () => {
+      if (current.current !== reporter) return
+      const next = reporter.getSnapshot()
+      setSnapshot(next)
+      if (next.state !== 'running') {
+        if (next.error != null) setError(next.error)
+        stop()
+      }
+    }
+    const interval = setInterval(poll, 100)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [reporter, stop])
 
   const start = useCallback(async () => {
-    if (running) return
-    setRunning(true)
+    if (starting.current || current.current != null) return
+    starting.current = true
+    const id = ++generation.current
+    setPreparing(true)
     setError('')
+    setCameraSettings('')
+    setSnapshot(EMPTY)
     try {
-      await fetch(`${server}/reset`, { method: 'POST' })
-      run.current = { active: true, lastSent: '', count: 0 }
-      setCount(0)
-      const startedAt = Date.now()
-      setElapsed(0)
-      while (run.current.count < TARGET) {
-        setElapsed((Date.now() - startedAt) / 1000)
-        await delay(100)
+      const next = await benchmark.createReporter({
+        serverURL: server.trim(),
+        target: TARGET,
+      })
+      if (id !== generation.current) {
+        next.stop()
+        return
       }
-      setElapsed((Date.now() - startedAt) / 1000)
-      setResults((prev) => ({ ...prev, [engine]: Date.now() - startedAt }))
-    } catch (e) {
-      setError(String(e))
+      current.current = next
+      setReporter(next)
+    } catch (error) {
+      if (id === generation.current) setError(String(error))
     } finally {
-      run.current.active = false
-      setRunning(false)
+      starting.current = false
+      if (mounted.current) setPreparing(false)
     }
-  }, [running, server, engine])
-
-  if (device == null) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.text}>No Camera device!</Text>
-      </View>
-    )
-  }
+  }, [server])
 
   return (
     <View style={styles.flex}>
-      <Camera
-        style={styles.flex}
-        device={device}
-        isActive={isActive}
-        outputs={[frameOutput]}
-      />
-
+      {reporter != null && isActive && isFocused && (
+        <ThroughputCamera
+          reporter={reporter}
+          engine={engine}
+          onError={cameraError}
+          onConfiguration={setCameraSettings}
+        />
+      )}
       <View style={styles.top}>
-        {/* <TextInput
+        <TextInput
           style={styles.input}
           value={server}
           onChangeText={setServer}
@@ -134,7 +130,7 @@ export function ThroughputScreen() {
           autoCorrect={false}
           keyboardType="url"
           testID="server-url"
-        /> */}
+        />
         <View style={styles.row}>
           {(['zxing', 'mlkit'] as const).map((e) => (
             <Pressable
@@ -151,26 +147,36 @@ export function ThroughputScreen() {
           ))}
         </View>
       </View>
-
       <View style={styles.bottom}>
+        {cameraSettings !== '' && (
+          <Text style={styles.results}>{cameraSettings}</Text>
+        )}
         <View style={styles.counter}>
           <Text style={styles.count} testID="throughput-count">
-            {count}
+            {snapshot.count}
           </Text>
           <Text style={styles.text}>
-            {`${elapsed.toFixed(1)}s `}
+            {(snapshot.elapsedMs / 1000).toFixed(3)}s
+          </Text>
+          <Text style={styles.text}>
+            {preparing
+              ? 'Resetting server and warming HTTP…'
+              : running && snapshot.count === 0
+                ? 'Waiting for the first accepted QR…'
+                : snapshot.state === 'completed'
+                  ? `${TARGET} confirmations / ${TARGET - 1} timed intervals`
+                  : ''}
           </Text>
         </View>
         {error !== '' && <Text style={styles.error}>{error}</Text>}
         <View style={styles.row}>
           <Pressable
-            style={[styles.button, styles.start, running && styles.disabled]}
-            onPress={start}
-            disabled={running}
+            style={[styles.button, styles.start]}
+            onPress={running ? stop : start}
             testID="start-throughput"
           >
             <Text style={styles.startText}>
-              {running ? 'Running…' : `Start ${TARGET} QRs (${engine})`}
+              {running ? 'Stop' : `Start ${TARGET} QRs (${engine})`}
             </Text>
           </Pressable>
           <Pressable
