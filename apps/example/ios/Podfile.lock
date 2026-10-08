@@ -2145,7 +2145,7 @@ PODS:
     - RNWorklets
     - VisionCamera
     - Yoga
-  - VisionCameraZxing (0.1.0-alpha.0):
+  - VisionCameraZxing (0.1.0):
     - hermes-engine
     - NitroImage
     - NitroModules
@@ -2535,7 +2535,7 @@ SPEC CHECKSUMS:
   VisionCamera: f84550cffbbf23f3cac7a3d1d2e66e5098a4e8eb
   VisionCameraBarcodeScanner: 20cca2d99425546548511a95980bb8b1117fb830
   VisionCameraWorklets: b6de1b4f950e958236366987750ed0b3c86228b9
-  VisionCameraZxing: a3ce3b306638ce4503a0f0dabbd28574a144136b
+  VisionCameraZxing: ea5fcdbd65a579f7747d5dc9098c99fec7a5ed84
   Yoga: 77dfa8673de2874e1855002ae59c68b8be9b007b
 
 PODFILE CHECKSUM: 225e4ff5bb6719c47fa66724251c4ad2098c76da
