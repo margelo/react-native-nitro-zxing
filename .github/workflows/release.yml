@@ -21,9 +21,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    environment:
-      name: release
-      url: https://www.npmjs.com/package/react-native-nitro-zxing
     steps:
       - uses: actions/checkout@v6
         with:
