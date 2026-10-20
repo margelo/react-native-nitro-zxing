@@ -6,14 +6,34 @@ on:
   pull_request:
     paths:
       - '.github/workflows/build-ios-release.yml'
+      - 'packages/react-native-nitro-zxing/VisionCameraZxing.podspec'
+      - 'apps/example/ios/Podfile'
 
 permissions:
   contents: write
 
 jobs:
   build_release:
-    name: Build iOS Example App (release, new architecture)
+    name: Build iOS Example App (release, new architecture, ${{ matrix.linkage }})
     runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - linkage: static libraries
+            use_frameworks: ''
+            sdk: iphonesimulator
+            destination: generic/platform=iOS Simulator
+          # The framework builds target devices: MLKit (used by the example's benchmark) ships no
+          # arm64 simulator slice, so the barcode-scanner framework can't link for the simulator.
+          - linkage: dynamic frameworks
+            use_frameworks: dynamic
+            sdk: iphoneos
+            destination: generic/platform=iOS
+          - linkage: static frameworks
+            use_frameworks: static
+            sdk: iphoneos
+            destination: generic/platform=iOS
     steps:
       - uses: actions/checkout@v6
         with:
@@ -34,9 +54,14 @@ jobs:
         run: sudo xcode-select -s "/Applications/Xcode_26.2.app/Contents/Developer"
       - name: Install Pods
         working-directory: apps/example
-        run: bun pods
+        env:
+          LINKAGE: ${{ matrix.use_frameworks }}
+        run: |
+          # The Podfile turns on use_frameworks! whenever USE_FRAMEWORKS is set, even to ""
+          if [ -n "$LINKAGE" ]; then export USE_FRAMEWORKS="$LINKAGE"; fi
+          bun pods
 
-      - name: Build App (Release, Simulator)
+      - name: Build App (Release, ${{ matrix.sdk }})
         working-directory: apps/example/ios
         run: |
           set -o pipefail
@@ -45,21 +70,22 @@ jobs:
             -derivedDataPath build -UseModernBuildSystem=YES \
             -workspace SimpleCamera.xcworkspace \
             -scheme SimpleCamera \
-            -sdk iphonesimulator \
+            -sdk ${{ matrix.sdk }} \
             -configuration Release \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination '${{ matrix.destination }}' \
             -showBuildTimingSummary \
             clean \
             build \
             CODE_SIGNING_ALLOWED=NO | xcbeautify --renderer github-actions
 
       - name: Package .app for Simulator
+        if: ${{ matrix.use_frameworks == '' }}
         run: |
           cd apps/example/ios/build/Build/Products/Release-iphonesimulator
           zip -r ../../../../../../../VisionCameraZxingExample-Release-Simulator.zip SimpleCamera.app
 
       - name: Upload .app artifact
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && matrix.use_frameworks == '' }}
         uses: actions/upload-artifact@v7
         with:
           name: VisionCameraZxingExample-Release-Simulator
@@ -67,7 +93,7 @@ jobs:
           retention-days: 7
 
       - name: Upload .app to Release
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && matrix.use_frameworks == '' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${GITHUB_REF_NAME}" "VisionCameraZxingExample-Release-Simulator.zip#VisionCameraZxingExample-Simulator-${GITHUB_REF_NAME}.app.zip" --clobber
