@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release type (auto = derive from conventional commits, alpha = pre-release)'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+          - alpha
+        default: auto
+
+jobs:
+  release:
+    name: Publish to npm (OIDC) and create GitHub release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: release
+      url: https://www.npmjs.com/package/react-native-nitro-zxing
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Update npm (trusted publishing needs npm >= 11.5.1)
+        run: npm install -g npm@11
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install npm dependencies (bun)
+        run: bun install
+
+      - name: Configure Git
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+      - name: Determine release version
+        id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          RELEASE_TYPE: ${{ github.event.inputs.release-type }}
+        run: |
+          ARGS=""
+          if [[ "$RELEASE_TYPE" == "alpha" ]]; then
+            ARGS="--preRelease=alpha"
+          elif [[ "$RELEASE_TYPE" != "auto" ]]; then
+            ARGS="$RELEASE_TYPE"
+          fi
+          # Resolve the version once at the root so package and root release-it agree.
+          VERSION=$(./node_modules/.bin/release-it --release-version --ci $ARGS | tail -n1)
+          echo "Releasing $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "args=$ARGS" >> "$GITHUB_OUTPUT"
+
+      - name: Release ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: bun run release ${{ steps.version.outputs.version }} ${{ steps.version.outputs.args }} --ci
