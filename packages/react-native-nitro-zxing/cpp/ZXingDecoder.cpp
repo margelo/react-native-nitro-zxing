@@ -142,7 +142,7 @@ ZXingDecoder::ZXingDecoder(const std::vector<TargetBarcodeFormat>& formats, Mode
     _attempts.push_back({makeOptions(zxingFormats, false, false, false), 0, 1});
     // Rotation handling costs several times a plain scan, so look for rotated codes periodically
     // instead of on every frame that finds nothing.
-    _attempts.push_back({makeOptions(zxingFormats, false, true, false), 0, kLiveRotationPeriod});
+    _attempts.push_back({makeOptions(zxingFormats, false, true, false).setTryInvert(true), 0, kLiveRotationPeriod});
   } else {
     // A still is usually many megapixels: scan a reduced copy first, then the full image, and
     // only then the expensive heuristics that help with blurred or inverted captures.
